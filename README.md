@@ -24,7 +24,15 @@ DUMB TASK
 
 Requires **OpenCode V2**; tested on **2.0.26**. V1 is not supported.
 
-Add the package and your profiles to `~/.config/opencode/opencode.json` (or a project's `opencode.json`). OpenCode installs the package automatically; no separate TUI configuration is needed.
+Install it using OpenCode's CLI:
+
+```sh
+opencode plugin add opencode-session-profiles
+```
+
+This installs the package and adds it to your global configuration. Then replace the generated string entry in `~/.config/opencode/opencode.json` with the object below to configure your profiles. The install command does not accept profile options; those still belong in configuration. No separate TUI configuration is needed.
+
+Alternatively, add the configured entry directly to your global or project `opencode.json`; OpenCode installs missing packages automatically.
 
 ```json
 {
