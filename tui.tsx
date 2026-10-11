@@ -14,6 +14,8 @@ export default Plugin.define({
     const settings = parseSettings(await rpc.settings({}, { location: context.location ?? context.data.location.default() }));
     const [busy, setBusy] = createSignal(false);
     const [profiles, setProfiles] = createSignal<Record<string, string | undefined>>({});
+    const [launchMode, setLaunchMode] = createSignal(settings.defaultMode);
+    const home = () => context.ui.router.current().type === "home";
     const sessionID = () => {
       const route = context.ui.router.current();
       return route.type === "session" ? route.sessionID : undefined;
@@ -24,14 +26,12 @@ export default Plugin.define({
     };
     const mode = createMemo(() => {
       const id = sessionID();
+      if (home()) return launchMode();
       return (id ? profiles()[id] : undefined) ?? savedMode(session()?.metadata, settings);
     });
-    async function refreshProfile(id: string, applyVariant = false) {
+    async function refreshProfile(id: string) {
       const current = await context.client.session.get({ sessionID: id });
       setProfiles((state) => ({ ...state, [id]: savedMode(current.metadata, settings) }));
-      if (applyVariant && id === sessionID()) {
-        context.ui.model.variant.set(current.model?.variant === "default" ? undefined : current.model?.variant);
-      }
     }
     const modelLabel = (value: string) => formatModel(value, {
       providers: context.data.location.provider.list(session()?.location ?? context.location),
@@ -42,9 +42,30 @@ export default Plugin.define({
       context.ui.toast.show({ title: "Mode switch failed", message: error instanceof Error ? error.message : String(error), variant: "error" });
     }
 
+    async function start() {
+      if (!home() || busy()) return;
+      setBusy(true);
+      try {
+        const created = await rpc.start({ mode: launchMode() }, { location: context.location ?? context.data.location.default() });
+        setProfiles((state) => ({ ...state, [created.sessionID]: created.mode }));
+        await context.data.session.sync(created.sessionID);
+        context.ui.router.navigate({ type: "session", sessionID: created.sessionID });
+        await refreshProfile(created.sessionID);
+      } catch (error) {
+        failure(error);
+      } finally {
+        setBusy(false);
+      }
+    }
+
     async function select(target: string) {
       const id = sessionID();
-      if (!id || busy()) return;
+      if (busy()) return;
+      if (!id) {
+        if (!home()) return;
+        setLaunchMode(target);
+        return;
+      }
       const queuedGeneration = context.data.session.pending.list(id).some((item) => item.type === "user" || item.type === "compaction");
       if (context.data.session.status(id) !== "idle" || queuedGeneration) {
         context.ui.toast.show({ message: "Wait for this session to finish before switching modes.", variant: "warning" });
@@ -55,7 +76,7 @@ export default Plugin.define({
         await rpc.select({ sessionID: id, mode: target }, { location: session()?.location ?? context.location });
         setProfiles((state) => ({ ...state, [id]: target }));
         await context.data.session.sync(id);
-        await refreshProfile(id, true);
+        await refreshProfile(id);
       } catch (error) {
         failure(error);
       } finally {
@@ -73,7 +94,7 @@ export default Plugin.define({
           group: "Profiles",
           bind: "ctrl+shift+m",
           palette: true,
-          enabled: () => !!sessionID() && !busy(),
+          enabled: () => (home() || !!sessionID()) && !busy(),
           run: () => select(nextMode(mode(), settings)),
         },
         {
@@ -82,7 +103,7 @@ export default Plugin.define({
           group: "Profiles",
           palette: true,
           slash: { name: "mode", arguments: true },
-          enabled: () => !!sessionID() && !busy(),
+          enabled: () => (home() || !!sessionID()) && !busy(),
           async run(input) {
             const target = input?.trim() || await context.ui.dialog.select({
               title: "Profile",
@@ -100,6 +121,15 @@ export default Plugin.define({
             }
             await select(target);
           },
+        },
+        {
+          id: "session-modes.start",
+          title: "Start session with selected profile",
+          group: "Profiles",
+          palette: true,
+          slash: { name: "start-profile" },
+          enabled: () => home() && !busy(),
+          run: start,
         },
       ],
     }));
@@ -127,7 +157,7 @@ export default Plugin.define({
         agentTimer = undefined;
         if (event.data.sessionID !== sessionID()) return;
         void rpc.reconcile({ sessionID: event.data.sessionID }, { location: session()?.location ?? context.location })
-          .then(() => refreshProfile(event.data.sessionID, true)).catch(failure);
+          .then(() => refreshProfile(event.data.sessionID)).catch(failure);
       }, 75);
     };
     const stopAgent = context.data.on("session.agent.selected", applyAgentDefault);
@@ -161,12 +191,37 @@ export default Plugin.define({
           </box>
       ),
     });
+    const removeHome = context.ui.slot({
+      prepend: "home.footer",
+      render: () => (
+        <box flexDirection="column" gap={1} marginTop={1} marginBottom={1} flexShrink={0}>
+          <text fg={context.theme.text.base}><b>Profiles</b></text>
+          <box flexDirection="row" flexWrap="wrap" gap={2}>
+            <For each={Object.entries(settings.modes)}>
+              {([id, profile]) => (
+                <text onMouseDown={() => void select(id)} fg={id === launchMode() ? context.theme.text.feedback.success.base : context.theme.text.base}>
+                  <b>{profile.label}{id === launchMode() ? " (Current)" : ""}</b>
+                </text>
+              )}
+            </For>
+          </box>
+          <box flexDirection="column">
+            <text fg={context.theme.text.muted}>Build: {modelLabel(settings.modes[launchMode()].models.build)}</text>
+            <text fg={context.theme.text.muted}>Plan: {modelLabel(settings.modes[launchMode()].models.plan)}</text>
+          </box>
+          <text fg={context.theme.text.feedback.success.base} onMouseDown={() => void start()}>
+            <b>Start session with {settings.modes[launchMode()].label}</b> · /start-profile
+          </text>
+        </box>
+      ),
+    });
     return () => {
       stopAgent();
       clearTimeout(agentTimer);
       stopModel();
       stopMetadata();
       removeSidebar();
+      removeHome();
     };
   },
 });

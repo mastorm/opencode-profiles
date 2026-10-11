@@ -96,6 +96,16 @@ Run `opencode reload`, then reopen the TUI if necessary.
 
 Profile switching affects **only the current idle session**. The selection is saved with that session and survives restarts.
 
+### Before starting a session
+
+The launch screen shows your profiles, the selected profile's Build and Plan models, and a **(Current)** marker. It initially selects `defaultMode`.
+
+Click a profile, use **Ctrl+Shift+M**, or run **`/mode`** to change this selection. **Switching profiles keeps the launch screen open** and creates no session.
+
+When ready, click **Start session with …** or run **`/start-profile`**. This opens an empty session with the selected profile already applied, before any prompt can run. Existing sessions stay untouched.
+
+This launch selection is local to this TUI and does not change your configuration. Typing a normal prompt directly on the launch screen still follows OpenCode's ordinary new-session flow and uses the configured `defaultMode`; use **Start session with …** to apply a different launch selection.
+
 ### Defaults, not locks
 
 Selecting a profile immediately applies its default model for the current agent. Switching between Build and Plan applies that profile's corresponding default.
@@ -144,6 +154,8 @@ npm pack --dry-run
 Use a local package path in `plugins[].package` to try changes before publishing. Tests cover configuration validation, switching, session isolation, rollback, and preservation of manual model selections.
 
 For a live TUI smoke test, configure the three example profiles in a disposable project and run `python3 tests/smoke.py /path/to/project`. This creates and deletes only its own sessions and sends no prompts. Installing `pyte` in the test environment additionally checks sidebar placement and mouse selection.
+
+With `pyte` installed, `python3 tests/launch-smoke.py /path/to/project` also checks the launch indicator, mouse/keyboard/slash selection without leaving the launch screen, and explicit session start, including an 80×24 terminal.
 
 ## License
 

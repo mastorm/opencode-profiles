@@ -1,6 +1,6 @@
 {
   "name": "opencode-session-profiles",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Per-session model profiles for the OpenCode V2 TUI",
   "license": "MIT",
   "author": "mastorm",

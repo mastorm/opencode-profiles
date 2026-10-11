@@ -1,6 +1,6 @@
 import { Plugin } from "@opencode/plugin";
 import { agentKey, metadataKey, parseModel, parseSettings, savedMode } from "./config.ts";
-import { Modes, SelectInput, SessionInput } from "./rpc.ts";
+import { Modes, SelectInput, SessionInput, StartInput } from "./rpc.ts";
 
 export default Plugin.define({
   id: "opencode-session-profiles",
@@ -93,6 +93,26 @@ export default Plugin.define({
         try {
           const { sessionID, mode } = SelectInput.parse(input);
           return await exclusive(sessionID, () => selectMode(sessionID, mode));
+        } catch (error) {
+          throw call.error("profile_error", error instanceof Error ? error.message : String(error), {});
+        }
+      },
+      start: async (input, call) => {
+        try {
+          const { mode } = StartInput.parse(input);
+          const profile = Object.hasOwn(settings.modes, mode) ? settings.modes[mode] : undefined;
+          if (!profile) throw new Error(`Unknown mode: ${mode}`);
+          // Validate before creating anything. The TUI navigates only after the
+          // profile is saved, so a first prompt cannot race initialization.
+          await Promise.all(Object.values(profile.models).map(validate));
+          const created = await ctx.session.create({ location: { directory: ctx.location.directory } });
+          try {
+            await exclusive(created.id, () => selectMode(created.id, mode));
+          } catch (error) {
+            await ctx.session.remove({ sessionID: created.id });
+            throw error;
+          }
+          return { sessionID: created.id, mode };
         } catch (error) {
           throw call.error("profile_error", error instanceof Error ? error.message : String(error), {});
         }

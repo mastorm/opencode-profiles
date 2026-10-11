@@ -72,7 +72,15 @@ def main():
             output += capture(master, 2)
             state = api("get", f"/api/session/{session_id}")["data"]
             assert state["metadata"]["opencode.session-modes"] == mode, state
-        assert state["model"]["id"] == "gpt-6-luna" and state["model"]["variant"] == "max"
+        assert state["model"] == {"providerID": "openai", "id": "gpt-6-luna", "variant": "max"}, state
+        try:
+            import pyte
+            model_screen = pyte.Screen(180, 60)
+            pyte.Stream(model_screen).feed(output.decode(errors="replace"))
+            composer = [line for line in model_screen.display if "Build" in line and "·" in line]
+            assert any("GPT-6 Luna" in line and "OpenAI" in line and "max" in line.lower() for line in composer), composer
+        except ImportError:
+            pass
         api("post", f"/api/session/{session_id}/agent", {"agent": "plan"})
         output += capture(master, 2)
         assert api("get", f"/api/session/{session_id}")["data"]["model"]["id"] == "gpt-6.1-sol"
