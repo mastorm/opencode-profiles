@@ -24,6 +24,18 @@ DUMB TASK
 
 Requires **OpenCode V2**; tested on **2.0.26**. V1 is not supported.
 
+### Guided setup with OpenCode
+
+Let OpenCode ask what you want and configure the plugin for you:
+
+```sh
+opencode mini --agent build --prompt 'Help me install and configure opencode-session-profiles. Read https://github.com/mastorm/opencode-profiles/blob/main/README.md for the configuration format. Before making changes, ask which profiles I want, the Build and Plan model and optional reasoning variant for each, and which profile should be the default. Inspect my available OpenCode models and offer valid choices; do not invent model IDs or ask for credentials. Summarize the proposed global configuration and wait for my confirmation. Then back up my existing configuration, install with opencode plugin add opencode-session-profiles, and configure exactly one plugin entry with my chosen options. Respect my OpenCode config directory and existing JSON or JSONC files; preserve unrelated settings, comments, and existing profiles unless I approve changing them. Do not change my global agent models or remove other plugins. Run opencode reload, verify the plugin loads, and explain how to use it and whether I need to reopen the TUI.'
+```
+
+This opens OpenCode's **interactive Mini interface in Build mode**. Answer its questions and approve the proposed changes and any requested permissions. It uses your connected model and may incur normal model costs; it is an agent-assisted setup, not a deterministic installer.
+
+### Manual setup
+
 Install it using OpenCode's CLI:
 
 ```sh
