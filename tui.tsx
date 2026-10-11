@@ -1,3 +1,4 @@
+/** @jsxImportSource @opentui/solid */
 import { Plugin } from "@opencode/plugin/tui";
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { nextMode, parseSettings, savedMode } from "./config.ts";

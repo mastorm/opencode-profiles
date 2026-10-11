@@ -1,6 +1,6 @@
 {
   "name": "opencode-session-profiles",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Per-session model profiles for the OpenCode V2 TUI",
   "license": "MIT",
   "author": "mastorm",
@@ -13,7 +13,7 @@
     ".": "./index.ts",
     "./tui": "./tui.tsx"
   },
-  "files": ["index.ts", "tui.tsx", "config.ts", "rpc.ts", "display.ts", "README.md", "LICENSE"],
+  "files": ["index.ts", "tui.tsx", "config.ts", "rpc.ts", "display.ts", "tsconfig.json", "README.md", "LICENSE"],
   "scripts": {
     "test": "tsx --test *.test.ts",
     "typecheck": "tsc --noEmit",
@@ -31,9 +31,9 @@
   },
   "peerDependenciesMeta": {
     "@opencode/plugin": { "optional": true },
-    "@opentui/core": { "optional": true },
-    "@opentui/solid": { "optional": true },
-    "solid-js": { "optional": true }
+    "@opentui/core": { "optional": false },
+    "@opentui/solid": { "optional": false },
+    "solid-js": { "optional": false }
   },
   "devDependencies": {
     "@opencode/plugin": "2.0.26",
