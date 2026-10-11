@@ -1,0 +1,48 @@
+{
+  "name": "opencode-session-profiles",
+  "version": "0.1.0",
+  "description": "Per-session model profiles for the OpenCode V2 TUI",
+  "license": "MIT",
+  "author": "mastorm",
+  "repository": { "type": "git", "url": "git+https://github.com/mastorm/opencode-profiles.git" },
+  "homepage": "https://github.com/mastorm/opencode-profiles#readme",
+  "bugs": { "url": "https://github.com/mastorm/opencode-profiles/issues" },
+  "keywords": ["opencode", "opencode-plugin", "profiles", "tui", "models"],
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.tsx"
+  },
+  "files": ["index.ts", "tui.tsx", "config.ts", "rpc.ts", "display.ts", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "tsx --test *.test.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test",
+    "prepublishOnly": "npm run check"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.26 <2.1",
+    "@opentui/core": ">=0.5.17 <0.6",
+    "@opentui/solid": ">=0.5.17 <0.6",
+    "solid-js": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode/plugin": { "optional": true },
+    "@opentui/core": { "optional": true },
+    "@opentui/solid": { "optional": true },
+    "solid-js": { "optional": true }
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.0.26",
+    "@opencode/theme": "2.0.26",
+    "@opentui/core": "0.5.17",
+    "@opentui/solid": "0.5.17",
+    "@types/node": "^22.0.0",
+    "solid-js": "^1.9.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
